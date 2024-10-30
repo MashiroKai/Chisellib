@@ -77,3 +77,19 @@ class ChnCtrl extends Bundle{
   val read = Output(Bool())
 }
 
+class LedCtrl extends Bundle{
+val data = UInt(4.W)
+val en   = Bool()
+}
+
+class SpiMaster extends Bundle{
+//spi setting
+val cpol = Output(Bool())
+val cpha = Output(Bool())
+val clkDivide = Output(Bool())
+//spi user interface
+val go = Output(Bool())
+val data = Output(UInt(16.W))
+val busy = Input(Bool())
+val done = Input(Bool())
+}

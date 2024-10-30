@@ -48,7 +48,7 @@
 module spi_master
   #(parameter DATA_WIDTH=16,
     NUM_PORTS=1,
-    CLK_DIVIDER_WIDTH=8,
+    CLK_DIVIDER_WIDTH=1,
     SAMPLE_PHASE=0
     )
   (input clk,
