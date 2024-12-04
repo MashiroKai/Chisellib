@@ -28,11 +28,23 @@ object Cnt{
         reg := Mux(tick, 0.U, Mux(valid,reg + 1.U,reg))
         tick
   }
-    def tickGen(max: Int) = {
+        def tickGen(max: Int) = {
         val reg = RegInit(0.U(log2Up(max).W))
         val tick = reg === (max-1).U
         reg := Mux(tick, 0.U, reg + 1.U)
         tick
+  }
+      def validTickGenCnt(max: Int,valid : Bool) = {
+        val reg = RegInit(0.U(log2Up(max).W))
+        val tick = reg === (max-1).U
+        reg := Mux(tick, 0.U,  Mux(valid,  reg + 1.U  ,  reg))
+        (tick,reg)
+  }
+      def reverseValidTickGenCnt(max: Int,valid : Bool) = {
+        val reg = RegInit((max-1).U(log2Up(max).W))
+        val tick = reg === 0.U
+        reg := Mux(tick, (max-1).U,  Mux(valid,  reg - 1.U  ,  reg))
+        (tick,reg)
   }
     def counter(max: Int) = {
     val x = RegInit(0.U(log2Up(max).W))
@@ -52,6 +64,26 @@ object Cnt{
     }
     (cntReg, nextVal)
   }
+      def validCntClearTick(max :UInt ,valid :Bool,clear :Bool) = {
+    val width = max.getWidth
+    val cnt = RegInit(0.U(width.W))
+    val tick = cnt === max-1.U
+    cnt := Mux(clear||cnt === max-1.U,  0.U  ,  Mux(valid,  cnt + 1.U  ,  cnt))
+    (tick , cnt)
+    }
+      def validCntClear(max :UInt ,valid :Bool,clear :Bool) = {
+    val width = max.getWidth
+    val cnt = RegInit(0.U(width.W))
+    cnt := Mux(clear||cnt === max-1.U,  0.U  ,  Mux(valid,  cnt + 1.U  ,  cnt))
+    cnt
+    }
+      def clearTick(max :UInt,clear :Bool) = {
+    val width = max.getWidth
+    val cnt = RegInit(0.U(width.W))
+    val tick = cnt === max-1.U
+    cnt := Mux(clear||(cnt === max-1.U),  0.U  , cnt + 1.U )
+    tick
+    }
 }
 object Main{
     // Flip internal state when input true.
@@ -72,7 +104,7 @@ object Main{
 object Shift{
   def shiftOut[T <:Data](gen: T , depth : Int ,valid : Bool ,position : UInt) = {
   val reg = RegInit(VecInit(Seq.fill(depth)(gen)))
-    reg(0) := gen
+    reg(0) := Mux(valid,gen,reg(0))
   for(i <- 1 until depth){
     reg(i) := Mux(valid,reg(i-1),reg(i))
   }
@@ -117,3 +149,4 @@ def shiftSum[T <: Data](gen: T, depth: Int, valid: Bool, position: UInt): UInt =
   signal
   }
 }
+
