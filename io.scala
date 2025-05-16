@@ -29,8 +29,8 @@ val data  = Input(UInt(8.W))
 }
 
 class AdcIo extends Bundle{
-val din = UInt(14.W)
 val ovr   = Bool()
+val data = UInt(14.W)
 }
 
 class RamIoWr[T <: Data](Depth : Int ,gen : T) extends Bundle{

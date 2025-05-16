@@ -102,6 +102,14 @@ object Main{
    // def pulse(n: UInt) = counter(n - 1.U) === 0.U
 }
 object Shift{
+  def shift[T <:Data](gen: T , depth : Int ,valid : Bool) = {
+  val reg = RegInit(VecInit(Seq.fill(depth)(gen)))
+    reg(0) := Mux(valid,gen,reg(0))
+  for(i <- 1 until depth){
+    reg(i) := Mux(valid,reg(i-1),reg(i))
+  }
+    reg(depth-1)
+  }
   def shiftOut[T <:Data](gen: T , depth : Int ,valid : Bool ,position : UInt) = {
   val reg = RegInit(VecInit(Seq.fill(depth)(gen)))
     reg(0) := Mux(valid,gen,reg(0))
@@ -148,5 +156,39 @@ def shiftSum[T <: Data](gen: T, depth: Int, valid: Bool, position: UInt): UInt =
   val signal = Edge.rising(Mux(reg.asUInt === data , true.B , false.B))
   signal
   }
+def shiftAverage[T <: Data](gen: T, valid: Bool, depth: Int): UInt = {
+  val width = gen.getWidth
+  val reg = RegInit(VecInit(Seq.fill(depth)(0.U(width.W)))) // 滑动窗口存储最近 depth 个值
+
+  // 移位更新逻辑
+  when(valid) {
+    for (i <- depth - 1 to 1 by -1) {
+      reg(i) := reg(i - 1) // 右移
+    }
+    reg(0) := gen // 最新数据进入
+  }
+
+  // 计算平均值 (扩展位宽防止溢出)
+  val sum = reg.reduce(_ +& _) // 使用 +& 避免溢出
+  val average = sum / depth.U
+  average
+}
+def shiftAverageValue[T <: Data](gen: T, valid: Bool, depth: Int): (UInt, UInt) = {
+  val width = gen.getWidth
+  val reg = RegInit(VecInit(Seq.fill(depth)(0.U(width.W)))) // 滑动窗口存储最近 depth 个值
+
+  // 移位更新逻辑
+  when(valid) {
+    for (i <- depth - 1 to 1 by -1) {
+      reg(i) := reg(i - 1) // 右移
+    }
+    reg(0) := gen // 最新数据进入
+  }
+
+  // 计算平均值 (扩展位宽防止溢出)
+  val sum = reg.reduce(_ +& _) // 使用 +& 避免溢出
+  val average = sum / depth.U
+  (average,reg(depth-1))
+}
 }
 
